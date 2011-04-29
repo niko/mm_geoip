@@ -12,7 +12,7 @@ class MMGeoip
     :area_code, :timezone]
   attr_reader :fields
   
-  class NoIpGiven << StandardError; end
+  class NoIpGiven < StandardError; end
   
   def initialize(env)
     @env = env # may be a Rack @env or any hash containing initial data
