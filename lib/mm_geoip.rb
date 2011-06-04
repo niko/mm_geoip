@@ -2,15 +2,15 @@ require 'geoip'
 
 $LOAD_PATH << File.dirname(File.expand_path __FILE__)
 
+class MMGeoip; end
+
 require 'mm_geoip/region'
 
 class MMGeoip
-  DATA_PATH = File.join(File.dirname(File.expand_path(__FILE__)), '../data')
-  
   FIELDS = [:hostname, :ip, :country_code, :country_code3, :country_name,
     :country_continent, :region, :city, :postal_code, :lat, :lng, :dma_code,
     :area_code, :timezone]
-  attr_reader :fields
+  attr_reader :lookup
   
   class NoIpGiven < StandardError; end
   
@@ -20,49 +20,55 @@ class MMGeoip
     
     raise NoIpGiven.new unless @env[:ip]
     
-    @geodb = GeoIP.new File.join(DATA_PATH, 'GeoLiteCity.dat')
+    @geodb = GeoIP.new self.class.db_path
   end
   
-  FIELDS.each do |getter|
-    define_method getter do
-      looked_up? ? fields[getter] || get_from_env(getter) : get_from_env(getter) || fields[getter]
+  FIELDS.each do |field|
+    define_method field do
+      # if already looked up, get field from lookup or environment (lookup has priority)
+      # else                  get field from environment or lookup (environment has priority; perhaps we don't have to lookup)
+      # looked_up? ? fields[field] || get_from_env(field) : get_from_env(field) || fields[field]
+      looked_up? ? lookup[field]  || get_from_env(field)  : get_from_env(field) || lookup[field]
     end
   end
   
   def get_from_env(field)
+    # APACHE:GEOIP with Geolite City give us:
+    # GEOIP_REGION, GEOIP_CITY, GEOIP_DMA_CODE, GEOIP_AREA_CODE, GEOIP_LAT, GEOIP_LNG
+    # 
+    # Nginx with HttpGeoIPModule and Geolite City makes these variables available in nginx.conf:
+    # $geoip_country_code, ..., you'll have to set the env variables by yourself.
+    # I'd recommend using the X_GEOIP_... form.
+    # 
+    # Here, we look for both forms and the plain version.
+    # 
     @env[field] || @env["GEOIP_#{field.upcase}"] || @env["X_GEOIP_#{field.upcase}"]
   end
   
   def region_name
-    Regions[country_code.to_sym] && Regions[country_code.to_sym][region]
+    MMGeoip::Regions[country_code.to_sym] && MMGeoip::Regions[country_code.to_sym][region]
   end
   
   def looked_up?
-    !!@fields
+    !!@lookup
   end
   
-  def fields
-    return @fields if @fields
+  def lookup                                                                                                                     
+    return @lookup if @lookup                                                                                                    
     
-    @fields = Hash[FIELDS.zip @geodb.city(@env[:ip])]
-    @fields[:region_name] = region_name
-    @fields
+    @lookup = Hash[FIELDS.zip @geodb.city(@env[:ip])]                                                                            
+    @lookup[:region_name] = region_name                                                                                          
+    @lookup                                                                                                                      
+  end
+  
+  def self.data_path
+    File.join(File.dirname(File.expand_path(__FILE__)), '../data')
+  end
+  def self.db_path
+    @db_path || File.join(data_path, 'GeoLiteCity.dat')
+  end
+  def self.db_path=(path)
+    @db_path = path
   end
   
 end
-
-
-env = {'REMOTE_ADDR' => '217.24.207.26'}
-m = MMGeoip.new env
-p m.fields
-
-
-env = {'REMOTE_ADDR' => '91.23.138.121'}
-m = MMGeoip.new env
-p m.fields
-
-
-env = {'REMOTE_ADDR' => '128.176.6.250'}
-m = MMGeoip.new env
-p m.fields
-

@@ -1,12 +1,10 @@
 h1. MMGeoip
 
-h2. DISCLAIMER: WORK IN PROGRESS!
-
 A proxy object around the geoip gem for lazy lookup. Includes a Rack middleware.
 
 * Rack::MMGeoip exposes all Maxmind properties: hostname, ip, country_code, country_code3, country_name, country_continent, region, city, postal_code, lat, lng, dma_code, area_code, timezone
 * Rack::MMGeoip pins a MMGeoipProxy to your environment and does the loopup lazy when you first access a geoip property.
-* Rack::MMGeoip looks for the standard geoip headers and wraps their access, too. So if you're adding these header with mod_geoip in Apache or with http_geoip_module in NGinX these headers are used. So you can use this middleware even in production without compromising performance if NGinX or Apache already add these headers.
+* Rack::MMGeoip looks for the standard geoip headers and wraps their access, too. So if you're adding these header with mod_geoip in Apache or with http_geoip_module in NGinX these headers are used. So you can use this middleware even in production without compromising performance if NGinX or Apache already adds these headers.
 
 h2. Performance
 
