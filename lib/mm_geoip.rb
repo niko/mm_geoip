@@ -42,23 +42,27 @@ class MMGeoip
     # 
     # Here, we look for both forms and the plain version.
     # 
-    @env[field] || @env["GEOIP_#{field.upcase}"] || @env["X_GEOIP_#{field.upcase}"]
+    @env[field] || @env["GEOIP_#{field.to_s.upcase}"] || @env["X_GEOIP_#{field.to_s.upcase}"]
   end
   
   def region_name
-    MMGeoip::Regions[country_code.to_sym] && MMGeoip::Regions[country_code.to_sym][region]
+    country_code && MMGeoip::Regions[country_code.to_sym] && MMGeoip::Regions[country_code.to_sym][region]
   end
   
   def looked_up?
     !!@lookup
   end
   
-  def lookup                                                                                                                     
-    return @lookup if @lookup                                                                                                    
+  def lookup
+    return @lookup if @lookup
     
-    @lookup = Hash[FIELDS.zip @geodb.city(@env[:ip])]                                                                            
-    @lookup[:region_name] = region_name                                                                                          
-    @lookup                                                                                                                      
+    looked_up_fields = @geodb.city @env[:ip]
+    
+    return @lookup = {} unless looked_up_fields
+    
+    @lookup = Hash[FIELDS.zip looked_up_fields]
+    @lookup[:region_name] = region_name
+    @lookup
   end
   
   def self.data_path

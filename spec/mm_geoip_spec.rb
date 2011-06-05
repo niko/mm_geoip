@@ -67,6 +67,13 @@ describe MMGeoip do
       mm_geoip.timezone.should          == 'Europe/Berlin'
       mm_geoip.region_name.should       == 'Baden-Wurttemberg'
     end
+    it "works with localhost, too" do
+      mm_geoip = MMGeoip.new :ip => '127.0.0.1'
+      mm_geoip.ip.should == '127.0.0.1'
+      
+      mm_geoip.hostname.should be_nil
+      mm_geoip.region_name.should be_nil
+    end
   end
   
   describe "#get_from_env" do
