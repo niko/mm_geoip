@@ -16,7 +16,7 @@ class MMGeoip
   
   def initialize(env)
     @env = env # may be a Rack @env or any hash containing initial data
-    @env[:ip] ||= @env["REMOTE_ADDR"] # :ip or "REMOTE_ADDR" should be present
+    @env[:ip] ||= @env["HTTP_X_REAL_IP"] || @env["HTTP_X_FORWARDED_FOR"] || @env["REMOTE_ADDR"]
     
     raise NoIpGiven.new unless @env[:ip]
     
@@ -60,7 +60,7 @@ class MMGeoip
     
     return @lookup = {} unless looked_up_fields
     
-    @lookup = Hash[FIELDS.zip looked_up_fields]
+    @lookup = Hash[FIELDS.zip looked_up_fields.to_a]
     @lookup[:region_name] = region_name
     @lookup
   end

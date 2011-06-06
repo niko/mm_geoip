@@ -32,6 +32,12 @@ describe MMGeoip do
     it "works with the IP as 'REMOTE_ADDR' field" do
       MMGeoip.new 'REMOTE_ADDR' => '134.34.3.2'
     end
+    it "works with the IP as 'HTTP_X_REAL_IP' field" do
+      MMGeoip.new 'HTTP_X_REAL_IP' => '134.34.3.2'
+    end
+    it "works with the IP as 'HTTP_X_FORWARDED_FOR' field" do
+      MMGeoip.new 'HTTP_X_FORWARDED_FOR' => '134.34.3.2'
+    end
     it "raises, if not :ip or 'REMOTE_ADDR' is given" do
       lambda{ MMGeoip.new :whatelse => 'something' }.should raise_error(MMGeoip::NoIpGiven)
     end
