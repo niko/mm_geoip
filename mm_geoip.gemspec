@@ -16,7 +16,9 @@ Gem::Specification.new do |s|
   
   s.files        = Dir.glob('lib/**/*') + Dir.glob('data/*')
   s.add_dependency "geoip"
+  
   s.add_development_dependency "rake"
+  s.add_development_dependency "bundler"
   
   s.test_files = Dir.glob('spec/**/*')
   s.add_development_dependency "rspec"
