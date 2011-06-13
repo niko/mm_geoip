@@ -1,3 +1,5 @@
+require 'mm_geoip.rb'
+
 module Rack
   class MMGeoip
     def initialize(app)
@@ -5,8 +7,8 @@ module Rack
     end
     
     def call(env)
-      env['GEOIP'] = ::MMGeoip.new env
-      @app.call(env)
+      @app.call env.dup.merge('GEOIP' => ::MMGeoip.new(env))
     end
   end
 end
+

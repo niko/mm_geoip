@@ -19,6 +19,8 @@ Gem::Specification.new do |s|
   
   s.add_development_dependency "rake"
   s.add_development_dependency "bundler"
+  s.add_development_dependency "sinatra"
+  s.add_development_dependency "rack-test"
   
   s.test_files = Dir.glob('spec/**/*')
   s.add_development_dependency "rspec"
