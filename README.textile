@@ -2,14 +2,16 @@ h1. MMGeoip
 
 A proxy object around the geoip gem for lazy lookup. Includes a Rack middleware.
 
-* Rack::MMGeoip exposes all Maxmind properties: hostname, ip, country_code, country_code3, country_name, country_continent, region, city, postal_code, lat, lng, dma_code, area_code, timezone
-* Rack::MMGeoip pins a MMGeoipProxy to your environment and does the loopup lazy when you first access a geoip property.
+* MMGeoip exposes all Maxmind properties: hostname, ip, country_code, country_code3, country_name, country_continent, region, city, postal_code, lat, lng, dma_code, area_code, timezone
+* Rack::MMGeoip pins a MMGeoip proxy to your environment and does the lookup lazy when you first access a geoip property.
 * Rack::MMGeoip looks for the standard geoip headers and wraps their access, too. So if you're adding these header with mod_geoip in Apache or with http_geoip_module in NGinX these headers are used. So you can use this middleware even in production without compromising performance if NGinX or Apache already adds these headers.
 
-h2. Usage
+h2. Synopsis
 
-<pre><code>
-geo = MMGeoip.new(:ip => '134.34.3.2')
+h3. Pure Ruby
+
+<pre><code>require 'mm_geoip'
+geo = MMGeoip.new :ip => '134.34.3.2'
 geo.city        # => "Konstanz"
 geo.region      # => "01" 
 geo.region_name # => "Baden-Wurttemberg"
@@ -17,12 +19,203 @@ geo.lat         # => 47.66669999999999
 geo.lng         # => 9.183300000000003
 </code></pre>
 
+h3. Rack middleware
+
+Easy as pie. Just @require 'rack/mm_geoip.rb'@ and then @use Rack::MMGeoip@.
+
+h3. Sinatra
+
+There is a helper for Sinatra. You just require it:
+
+<pre><code>require 'sinatra/mm_geoip.rb'
+</code></pre>
+
+Then in your app you must tell Rack to use the provided middleware (see above) and tell Sinatra to include the helper:
+
+<pre><code>use Rack::MMGeoip         # To stuff the MMGeoip proxy object into the env hash.
+helpers Sinatra::MMGeoip  # Only if you want to use the convinient #geoip helper method.
+</code></pre>
+
+You can then use the provided @geoip@ helper anywhere in your routes or your views.
+
+There also is a demo application with Sinatra available at "https://github.com/niko/mm_geoip_with_sinatra":https://github.com/niko/mm_geoip_with_sinatra. Try it at "http://mmgeoip.heroku.com/":http://mmgeoip.heroku.com/.
+
+h3. Command line
+
+<pre><code>$ mm_geoip 134.34.3.2
+Using database: data/GeoLiteCity.dat
+hostname: 134.34.3.2
+ip: 134.34.3.2
+country_code: DE
+country_code3: DEU
+country_name: Germany
+country_continent: EU
+region: 01
+city: Konstanz
+postal_code: 
+lat: 47.66669999999999
+lng: 9.183300000000003
+dma_code: 
+area_code: 
+timezone: Europe/Berlin
+region_name: Baden-Wurttemberg
+$
+</code></pre>
+
+h2. The database file
+
+The direct link to the free version of database is "http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz":http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
+
+To specify the database file to be used, you have two possibilities:
+
+* First you set an environment variable:" @MMGeoipDatabase=/your/database.dat mm_geoip 134.34.3.2"@
+* Or you pass the location as a second argument:" @mm_geoip 134.34.3.2 /your/database.dat"@
+* Lastly you can put or link one into the gem so mm_geoip finds it automatically:" @cp /your/database.dat /location/of/the/gem/data/GeoLiteCity.dat"@
+
+By default, the database is no longer included in the gem. It has made the gem huge and slow to install. In production use you will always want to update the database independently of the gem anyway.
+
+So the last possibility is mainly still working for people rebuilding the gem with the database included for distribution on multiple servers. A build script for that would look somewhat like this:
+
+<pre><code>git clone git://github.com/niko/mm_geoip.git
+cd mm_geoip
+curl http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz | gunzip > data/GeoLiteCity.dat
+gem build mm_geoip.gemspec
+</code></pre>
+
+When using the commercial version MaxMind provides a tool for updating it automatically.
+
 h2. Performance
 
-Rack::MMGeoip uses the geoip gem. In my tests this lib did about 17_000 lookups in about 17 seconds on my MBP, so you probably lose one ms per request when using the middleware.
+MMGeoip uses the geoip gem. On my laptop a single lookup takes about 0.6ms. Without actually querying it's somewhere between 0.15ms and 0.2ms. That means in all but the ultra fastest webapps you won't be able to measue any difference when using the MMGeoip rack middleware.
 
-h2. IP-Database
+But don't take my word for it, see for yourself. Get the demo app, run it and measure:
 
-This product includes GeoLite data created by MaxMind, available from http://www.maxmind.com/.
+ab -c 5 -n 1000 -H "X-FORWARDED-FOR: 95.113.5.17" http://127.0.0.1:4567/
 
-The direct link is http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
+Lies, damn lies and my results:
+
+h3. Without the middleware and any geoip lookup
+
+Server Software:        thin
+Server Hostname:        127.0.0.1
+Server Port:            3000
+
+Document Path:          /do_nothing
+Document Length:        657 bytes
+
+Concurrency Level:      5
+Time taken for tests:   4.536 seconds
+Complete requests:      1000
+Failed requests:        0
+Write errors:           0
+Total transferred:      800800 bytes
+HTML transferred:       657657 bytes
+Requests per second:    220.46 [#/sec] (mean)
+Time per request:       22.680 [ms] (mean)
+Time per request:       4.536 [ms] (mean, across all concurrent requests)
+Transfer rate:          172.41 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    0   1.0      0      13
+Processing:     4   22  13.3     16      89
+Waiting:        3   21  13.0     15      75
+Total:          4   23  13.3     16      89
+
+Percentage of the requests served within a certain time (ms)
+  50%     16
+  66%     23
+  75%     25
+  80%     26
+  90%     50
+  95%     54
+  98%     62
+  99%     70
+ 100%     89 (longest request)
+
+h3. With the middleware but without any geoip lookup
+
+Server Software:        thin
+Server Hostname:        127.0.0.1
+Server Port:            3000
+
+Document Path:          /do_nothing
+Document Length:        657 bytes
+
+Concurrency Level:      5
+Time taken for tests:   4.652 seconds
+Complete requests:      1000
+Failed requests:        0
+Write errors:           0
+Total transferred:      800800 bytes
+HTML transferred:       657657 bytes
+Requests per second:    214.96 [#/sec] (mean)
+Time per request:       23.260 [ms] (mean)
+Time per request:       4.652 [ms] (mean, across all concurrent requests)
+Transfer rate:          168.10 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    0   0.8      0      15
+Processing:     7   23  14.1     17      75
+Waiting:        3   22  13.9     16      71
+Total:          7   23  14.1     17      75
+
+Percentage of the requests served within a certain time (ms)
+  50%     17
+  66%     23
+  75%     26
+  80%     27
+  90%     53
+  95%     59
+  98%     70
+  99%     72
+ 100%     75 (longest request)
+
+h3. With the middleware and with a geoip lookup
+
+Server Software:        thin
+Server Hostname:        127.0.0.1
+Server Port:            3000
+
+Document Path:          /
+Document Length:        662 bytes
+
+Concurrency Level:      5
+Time taken for tests:   5.599 seconds
+Complete requests:      1000
+Failed requests:        0
+Write errors:           0
+Total transferred:      806610 bytes
+HTML transferred:       663324 bytes
+Requests per second:    178.61 [#/sec] (mean)
+Time per request:       27.994 [ms] (mean)
+Time per request:       5.599 [ms] (mean, across all concurrent requests)
+Transfer rate:          140.69 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    0   0.7      0      11
+Processing:     4   28  14.3     21      75
+Waiting:        4   26  14.5     20      74
+Total:          4   28  14.3     21      75
+
+Percentage of the requests served within a certain time (ms)
+  50%     21
+  66%     28
+  75%     30
+  80%     31
+  90%     58
+  95%     60
+  98%     66
+  99%     71
+ 100%     75 (longest request)
+
+h3. Summary
+
+4.5ms vs. 4.7ms vs. 5.6ms means to me:
+
+* Include MMGeoip whenever you need it.
+* The penalty on actions where you don't do an actual lookup is negligible.
+* The penalty for an actual lookup is 1ms.
+* Installing mod_geoip in Apache or http_geoip_module in NGinX is not worth it for any speed considerations. There may be others.
