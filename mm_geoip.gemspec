@@ -9,12 +9,14 @@ Gem::Specification.new do |s|
   s.homepage     = "http://github.com/niko/mm_geoip"
   s.summary      = "A proxy object around the geoip gem for lazy lookup. Includes a Rack middleware."
   s.description  = "A proxy object around the geoip gem for lazy lookup. Includes a Rack middleware."
-  # s.post_install_message = ""
+  s.post_install_message = "Try your new mm_geoip installation: type mm_geoip 134.34.3.2 [RETURN] in the command line."
   
   s.platform     = Gem::Platform::RUBY
   s.require_path = 'lib'
+  s.bindir       = 'bin'
+  s.executables  = 'mm_geoip'
   
-  s.files        = Dir.glob('lib/**/*') + Dir.glob('data/*')
+  s.files        = Dir.glob('lib/**/*') + Dir.glob('data/*') + Dir.glob('bin/*')
   s.add_dependency "geoip"
   
   s.add_development_dependency "rake"

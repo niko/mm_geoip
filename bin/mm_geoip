@@ -1,0 +1,41 @@
+#!/usr/bin/env ruby
+
+require 'mm_geoip'
+
+begin
+  if ip = ARGV[0]
+    MMGeoip.db_path = ARGV[1] if ARGV[1]
+    
+    puts "Using database: #{MMGeoip.db_path}"
+    
+    geoip = MMGeoip.new :ip => ip
+    
+    (MMGeoip::FIELDS + [:region_name]).each do |field|
+      puts "#{field}: #{geoip.send field}"
+    end
+  
+  else
+    puts "You should try passing an IP as argument: mm_geoip 134.34.3.2"
+  end
+rescue MMGeoip::NoDatabaseFile => e
+  puts %Q{
+MMGeoip could't find your geodb database file.
+#{e.class}: #{e.message}
+
+When runing this tool you have three possibilities to define the database location.
+
+* Either you can put one into the gem so mm_geoip finds it automatically:
+  ln -s /your/database.dat `pwd`
+
+* Or you set an environment variable:
+  MMGeoipDatabase=/your/database.dat mm_geoip 134.34.3.2
+
+* Or you pass the location as a second argument:
+  mm_geoip 134.34.3.2 /your/database.dat
+
+Download:
+  curl http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz | gunzip > GeoLiteCity.dat
+                                                                                                            
+}
+
+end
