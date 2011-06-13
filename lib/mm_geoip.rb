@@ -4,6 +4,7 @@ $LOAD_PATH << File.dirname(File.expand_path __FILE__)
 
 class MMGeoip; end
 
+require 'mm_geoip/version'
 require 'mm_geoip/region'
 
 class MMGeoip
@@ -13,14 +14,19 @@ class MMGeoip
   attr_reader :lookup
   
   class NoIpGiven < StandardError; end
+  class NoDatabaseFile < StandardError; end
   
   def initialize(env)
-    @env = env # may be a Rack @env or any hash containing initial data
-    @env[:ip] ||= @env["HTTP_X_REAL_IP"] || @env["HTTP_X_FORWARDED_FOR"] || @env["REMOTE_ADDR"]
+    # May be a Rack @env or any hash containing initial data. Or just an IP.
+    @env = env.is_a?(Hash) ? env.dup : {:ip => env}
+    @ip = @env[:ip] || @env["HTTP_X_REAL_IP"] || @env["HTTP_X_FORWARDED_FOR"] || @env["REMOTE_ADDR"]
     
-    raise NoIpGiven.new unless @env[:ip]
-    
-    @geodb = GeoIP.new self.class.db_path
+    raise NoIpGiven.new("No IP in env hash") unless @ip
+    raise NoDatabaseFile.new("No database file: #{self.class.db_path}") unless File.exists? self.class.db_path
+  end
+  
+  def geodb
+    @geodb ||= GeoIP.new self.class.db_path
   end
   
   FIELDS.each do |field|
@@ -56,7 +62,7 @@ class MMGeoip
   def lookup
     return @lookup if @lookup
     
-    looked_up_fields = @geodb.city @env[:ip]
+    looked_up_fields = geodb.city @ip
     
     return @lookup = {} unless looked_up_fields
     
@@ -69,7 +75,7 @@ class MMGeoip
     File.join(File.dirname(File.expand_path(__FILE__)), '../data')
   end
   def self.db_path
-    @db_path || File.join(data_path, 'GeoLiteCity.dat')
+    @db_path || ENV['MMGeoipDatabase'] || File.join(data_path, 'GeoLiteCity.dat')
   end
   def self.db_path=(path)
     @db_path = path

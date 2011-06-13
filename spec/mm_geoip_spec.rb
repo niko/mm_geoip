@@ -8,11 +8,11 @@ describe MMGeoip do
     it "should be fast" do
       # Succeeds with a margin of about 10% on my MBP core2duo 2.4GHz.
       # On slower computers this will fail.
-      with_lookup = Benchmark.measure{
+      Benchmark.measure{
         1000.times{mm_geoip = MMGeoip.new @env ; mm_geoip.city} # with lookup
-      }.total.should < 0.5
+      }.total.should < 0.6
     end
-    it "be lazy" do
+    it "be lazy, i.e. 3 times faster without lookup" do
       with_lookup = Benchmark.measure{
         1000.times{mm_geoip = MMGeoip.new @env ; mm_geoip.city} # with lookup
       }.total
@@ -27,6 +27,9 @@ describe MMGeoip do
   
   describe "#initialize" do
     it "works with the IP as :ip field" do
+      MMGeoip.new '134.34.3.2'
+    end
+    it "works with just the IP" do
       MMGeoip.new :ip => '134.34.3.2'
     end
     it "works with the IP as 'REMOTE_ADDR' field" do
@@ -43,12 +46,22 @@ describe MMGeoip do
     end
     it "puts the parameter into the env instance variable" do
       env = {:ip => '134.34.3.2'}
-      mm_geoip = MMGeoip.new(env)
+      mm_geoip = MMGeoip.new env
       mm_geoip.instance_variable_get('@env').should == env
     end
-    it "sets up a geipdb object" do
+    it "does not alter the env hash" do
+      env = {'REMOTE_ADDR' => '134.34.3.2'}
+      env_before = env.dup
+      mm_geoip = MMGeoip.new env
+      env.should == env_before
+    end
+  end
+  
+  describe "#geoip" do
+    it "sets up a geoidb object" do
       mm_geoip = MMGeoip.new(:ip => '134.34.3.2')
-      mm_geoip.instance_variable_get('@geodb').should be_a(GeoIP)
+      mm_geoip.geodb.should == mm_geoip.instance_variable_get('@geodb')
+      mm_geoip.geodb.should be_a(GeoIP)
     end
   end
   
