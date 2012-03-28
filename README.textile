@@ -21,13 +21,13 @@ geo.lng         # => 9.183300000000003
 
 h3. Rack middleware
 
-Easy as pie. Just @require 'rack/mm_geoip.rb'@ and then @use Rack::MMGeoip@.
+Easy as pie. Just @require 'rack/mm_geoip'@ and then @use Rack::MMGeoip@.
 
 h3. Sinatra
 
 There is a helper for Sinatra. You just require it:
 
-<pre><code>require 'sinatra/mm_geoip.rb'
+<pre><code>require 'sinatra/mm_geoip'
 </code></pre>
 
 Then in your app you must tell Rack to use the provided middleware (see above) and tell Sinatra to include the helper:
