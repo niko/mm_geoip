@@ -19,7 +19,10 @@ class MMGeoip
   def initialize(env)
     # May be a Rack @env or any hash containing initial data. Or just an IP.
     @env = env.is_a?(Hash) ? env.dup : {:ip => env}
-    @ip = @env[:ip] || @env["HTTP_X_REAL_IP"] || @env["HTTP_X_FORWARDED_FOR"] || @env["REMOTE_ADDR"]
+    @ip = @env[:ip] ||
+      @env["HTTP_X_REAL_IP"] ||
+      (@env["HTTP_X_FORWARDED_FOR"] && @env["HTTP_X_FORWARDED_FOR"].split(/[ ,]+/).first) ||
+      @env["REMOTE_ADDR"]
     
     raise NoIpGiven.new("No IP in env hash") unless @ip
     raise NoDatabaseFile.new("No database file: #{self.class.db_path}") unless File.exists? self.class.db_path

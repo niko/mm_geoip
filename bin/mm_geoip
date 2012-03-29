@@ -35,7 +35,7 @@ When runing this tool you have three possibilities to define the database locati
 
 Download:
   curl http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz | gunzip > GeoLiteCity.dat
-                                                                                                            
+
 }
 
 end

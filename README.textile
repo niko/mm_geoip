@@ -66,11 +66,11 @@ h2. The database file
 
 The direct link to the free version of database is "http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz":http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
 
-To specify the database file to be used, you have two possibilities:
+To specify the database file to be used, you have three possibilities:
 
-* First you set an environment variable:" @MMGeoipDatabase=/your/database.dat mm_geoip 134.34.3.2"@
-* Or you pass the location as a second argument:" @mm_geoip 134.34.3.2 /your/database.dat"@
-* Lastly you can put or link one into the gem so mm_geoip finds it automatically:" @cp /your/database.dat /location/of/the/gem/data/GeoLiteCity.dat"@
+* First you set an environment variable: @MMGeoipDatabase=/your/database.dat mm_geoip 134.34.3.2@
+* Or you pass the location as a second argument: @mm_geoip 134.34.3.2 /your/database.dat@
+* Lastly you can put or link one into the gem so mm_geoip finds it automatically: @cp /your/database.dat /location/of/the/gem/data/GeoLiteCity.dat@
 
 By default, the database is no longer included in the gem. It has made the gem huge and slow to install. In production use you will always want to update the database independently of the gem anyway.
 

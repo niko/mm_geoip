@@ -27,19 +27,28 @@ describe MMGeoip do
   
   describe "#initialize" do
     it "works with the IP as :ip field" do
-      MMGeoip.new '134.34.3.2'
+      g = MMGeoip.new '134.34.3.2'
+      g.lat
     end
     it "works with just the IP" do
-      MMGeoip.new :ip => '134.34.3.2'
+      g = MMGeoip.new :ip => '134.34.3.2'
+      g.lat
     end
     it "works with the IP as 'REMOTE_ADDR' field" do
-      MMGeoip.new 'REMOTE_ADDR' => '134.34.3.2'
+      g = MMGeoip.new 'REMOTE_ADDR' => '134.34.3.2'
+      g.lat
     end
     it "works with the IP as 'HTTP_X_REAL_IP' field" do
-      MMGeoip.new 'HTTP_X_REAL_IP' => '134.34.3.2'
+      g = MMGeoip.new 'HTTP_X_REAL_IP' => '134.34.3.2'
+      g.lat
     end
     it "works with the IP as 'HTTP_X_FORWARDED_FOR' field" do
-      MMGeoip.new 'HTTP_X_FORWARDED_FOR' => '134.34.3.2'
+      g = MMGeoip.new 'HTTP_X_FORWARDED_FOR' => '134.34.3.2'
+      g.lat
+    end
+    it "works with multiple IPs as 'HTTP_X_FORWARDED_FOR' field" do
+      g = MMGeoip.new 'HTTP_X_FORWARDED_FOR' => '134.34.3.2, 134.34.3.3'
+      g.lat
     end
     it "raises, if not :ip or 'REMOTE_ADDR' is given" do
       lambda{ MMGeoip.new :whatelse => 'something' }.should raise_error(MMGeoip::NoIpGiven)
