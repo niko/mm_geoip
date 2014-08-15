@@ -38,7 +38,7 @@ helpers Sinatra::MMGeoip  # Only if you want to use the convinient #geoip helper
 
 You can then use the provided @geoip@ helper anywhere in your routes or your views.
 
-There also is a demo application with Sinatra available at "https://github.com/niko/mm_geoip_with_sinatra":https://github.com/niko/mm_geoip_with_sinatra. Try it at "http://mmgeoip.heroku.com/":http://mmgeoip.heroku.com/.
+There also is a demo application with Sinatra available at "https://github.com/niko/mm_geoip_with_sinatra":https://github.com/niko/mm_geoip_with_sinatra. Try it at "http://mmgeoip.herokuapp.com/":http://mmgeoip.herokuapp.com/.
 
 h3. Command line
 
